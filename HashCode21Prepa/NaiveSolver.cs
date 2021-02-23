@@ -16,6 +16,12 @@ namespace HashCode21Prepa
         public List<string> Ingredients;
     }
 
+    public class Delivery
+    {
+        public int NumberOfPeople;
+        public List<int> PizzaIndexes;
+    }
+    
     // SOLVER
 
     class NaiveSolver
@@ -24,10 +30,10 @@ namespace HashCode21Prepa
         {
             // Model initializations
 
-            int M  = 0; // the number of pizz asavailable in the pizzeria
-            int T2 = 0; // the number of 2-person teams
-            int T3 = 0; // the number of 3-person teams
-            int T4 = 0; // the number of 4-person teams
+            int  M; // the number of pizzas available in the pizzeria
+            int T2; // the number of 2-person teams
+            int T3; // the number of 3-person teams
+            int T4; // the number of 4-person teams
 
             List<Pizza> pizzas = new List<Pizza>();
 
@@ -54,48 +60,87 @@ namespace HashCode21Prepa
 
                 Pizza newPizza = new Pizza()
                 {
-                    Index = i,
+                    Index = i -1,
                     NumberOfIngredients = int.Parse(linePizza[0]),
                     Ingredients = new List<string>()
                 };
 
-                for (int j = 1; i <= newPizza.NumberOfIngredients; i++)
+                for (int j = 1; j <= newPizza.NumberOfIngredients; j++)
                 {
                     newPizza.Ingredients.Add(linePizza[j]);
                 }
 
                 pizzas.Add(newPizza);
             }
-            
+
             /**************************************************************************************
              *  Solver
              **************************************************************************************/
 
-            //libraries[1].SentBooksIndexes = new List<int>() { 5, 2, 3 };
-            //libraries[0].SentBooksIndexes = new List<int>() { 0, 1, 2, 3, 4 };
+            // Initialize all deliveries (as we have infinite number of pizzas)
+            List<Delivery> infiniteDeliveries = new List<Delivery>();
+            for (int i = 0; i < T2; i++)
+            {
+                infiniteDeliveries.Add(new Delivery()
+                {
+                    NumberOfPeople = 2,
+                    PizzaIndexes = new List<int>()
+                });
+            }
+            for (int i = 0; i < T3; i++)
+            {
+                infiniteDeliveries.Add(new Delivery()
+                {
+                    NumberOfPeople = 3,
+                    PizzaIndexes = new List<int>()
+                });
+            }
+            for (int i = 0; i < T4; i++)
+            {
+                infiniteDeliveries.Add(new Delivery()
+                {
+                    NumberOfPeople = 4,
+                    PizzaIndexes = new List<int>()
+                });
+            }
 
-            //List<Library> signedUpLibraries = new List<Library>()
-            //{
-            //    libraries[1],
-            //    libraries[0]
-            //};
+            // Naive solver: fill the deliveries in order...
+            int pizzaIndex = 0;
+            foreach (Delivery delivery in infiniteDeliveries)
+            {
+                // S'il reste des pizza
+                if (pizzaIndex + delivery.NumberOfPeople <= M)
+                {
+                    int lockedPizzaIndex = pizzaIndex;
+                    // Donner autant de pizza que de personnes
+                    for (int i = lockedPizzaIndex; i < lockedPizzaIndex + delivery.NumberOfPeople; i++)
+                    {
+                        delivery.PizzaIndexes.Add(pizzas[i].Index);
+                        pizzaIndex++;
+                    }
+                }
+                else
+                    break;
+            }
+
+            // Remove unfulfilled orders
+            List<Delivery> actualDeliveries = infiniteDeliveries.Where(d => d.PizzaIndexes.Count > 0).ToList();
 
             /**************************************************************************************
              *  Output
              **************************************************************************************/
 
-            //Console.WriteLine("Output to file...");
+            Console.WriteLine("Output to file...");
 
-            //using (StreamWriter outputFile = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), outputFileName)))
-            //{
-            //    outputFile.WriteLine(signedUpLibraries.Count);
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(Directory.GetCurrentDirectory(), outputFileName)))
+            {
+                outputFile.WriteLine(actualDeliveries.Count);
 
-            //    foreach (Library l in signedUpLibraries)
-            //    {
-            //        outputFile.WriteLine(l.Id + " " + l.SentBooksIndexes.Count);
-            //        outputFile.WriteLine(String.Join(' ', l.SentBooksIndexes));
-            //    }
-            //}
+                foreach (Delivery delivery in actualDeliveries)
+                {
+                    outputFile.WriteLine(delivery.PizzaIndexes.Count + " " + String.Join(' ', delivery.PizzaIndexes));
+                }
+            }
 
             Console.WriteLine("Done...");
             Console.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), outputFileName));
